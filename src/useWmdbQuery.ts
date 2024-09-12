@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 export const useWmdbQuery = <T extends Model>(
   tableName: TableName<T>,
   query: Q.Clause[] = []
-) => {
+): T[] | undefined => {
   const [items, setItems] = useState<T[]>();
   const db = useDatabase();
 
