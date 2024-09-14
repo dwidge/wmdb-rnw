@@ -9,6 +9,14 @@ import { useDatabase } from "@nozbe/watermelondb/react";
 import type { Model, Q, TableName } from "@nozbe/watermelondb";
 import { useEffect, useState } from "react";
 
+/**
+ * A custom hook to query items from the WatermelonDB database.
+ *
+ * @template T - The type of the model.
+ * @param {TableName<T>} tableName - The name of the table to query.
+ * @param {Q.Clause[]} [query=[]] - An array of query clauses.
+ * @returns {T[] | undefined} - An array of items or undefined.
+ */
 export const useWmdbQuery = <T extends Model>(
   tableName: TableName<T>,
   query: Q.Clause[] = []

@@ -10,6 +10,12 @@ import LokiJSAdapter, {
 } from "@nozbe/watermelondb/adapters/lokijs";
 import { type SQLiteAdapterOptions } from "@nozbe/watermelondb/adapters/sqlite/type";
 
+/**
+ * Creates an instance of LokiJSAdapter.
+ *
+ * @param {Pick<LokiAdapterOptions, Extract<keyof LokiAdapterOptions, keyof SQLiteAdapterOptions>>} options - The options to configure the adapter.
+ * @returns {LokiJSAdapter} - The LokiJSAdapter instance.
+ */
 export const createAdapterLoki = (
   options: Pick<
     LokiAdapterOptions,
