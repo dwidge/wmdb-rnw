@@ -1,6 +1,8 @@
 {
   "name": "@dwidge/wmdb-expo",
   "version": "0.0.4",
+  "description": "A WatermelonDB adapter for Expo applications.",
+  "repository": "github:dwidge/wmdb-expo",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
@@ -9,11 +11,6 @@
       "require": "./dist/cjs/index.js",
       "import": "./dist/esm/index.js",
       "types": "./dist/types/index.d.ts"
-    },
-    "./*": {
-      "require": "./dist/cjs/*.js",
-      "import": "./dist/esm/*.js",
-      "types": "./dist/types/*.d.ts"
     }
   },
   "files": [
@@ -38,5 +35,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "packageManager": "pnpm@9.7.1",
+  "engines": {
+    "node": ">=20"
   }
 }
