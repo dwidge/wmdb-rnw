@@ -14,7 +14,7 @@ export const createAdapterSQLite = (
     SQLiteAdapterOptions,
     // Accept only the options shared between SQLiteAdapterOptions and LokiAdapterOptions
     Extract<keyof SQLiteAdapterOptions, keyof LokiAdapterOptions>
-  >
+  >,
 ) =>
   new SQLiteAdapter({
     jsi: false,

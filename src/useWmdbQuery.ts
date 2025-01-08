@@ -19,7 +19,8 @@ import { useEffect, useState } from "react";
  */
 export const useWmdbQuery = <T extends Model>(
   tableName: TableName<T>,
-  query: Q.Clause[] = []
+  query: Q.Clause[] = [],
+  columns: string[] = ["id"],
 ): T[] | undefined => {
   const [items, setItems] = useState<T[]>();
   const db = useDatabase();
@@ -28,10 +29,8 @@ export const useWmdbQuery = <T extends Model>(
     const subscription = db
       .get<T>(tableName)
       .query(query)
-      .observe()
-      .subscribe((items) => {
-        setItems(items);
-      });
+      .observeWithColumns(columns)
+      .subscribe((items) => setItems(items.map((v: any) => v._raw)));
 
     return () => {
       subscription.unsubscribe();
