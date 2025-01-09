@@ -5,8 +5,9 @@
 import { ApiWmdbItem1, ExtendedApi, Fetch } from "@dwidge/crud-api-react";
 import { unixSeconds } from "@dwidge/utils-js";
 import { SyncPullArgs, SyncPushArgs } from "@nozbe/watermelondb/sync";
-import { ParseItem } from "./useWatermelonLocal";
-import { OnSync } from "./Sync";
+import { OnSync } from "./Sync.js";
+import { fetchItemsInChunks } from "./fetchItemsInChunks.js";
+import { ParseItem } from "./useWatermelonLocal.js";
 
 export type WatermelonSync<T extends Partial<ApiWmdbItem1>> = {
   pullChanges: (
@@ -41,7 +42,8 @@ export const useWatermelonSync = <T extends ApiWmdbItem1>(
     onSync?: OnSync,
   ) => {
     const api = useApi(fetch);
-    const items = (await api.getList())?.map(parse);
+    const limit = 1000;
+    const items = (await fetchItemsInChunks(api, limit)).map(parse);
 
     const {
       created = [],

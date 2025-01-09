@@ -1,6 +1,6 @@
 {
   "name": "@dwidge/wmdb-expo",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A WatermelonDB adapter for Expo applications.",
   "repository": "github:dwidge/wmdb-expo",
   "main": "./dist/cjs/index.js",
@@ -22,7 +22,7 @@
     "test": "node --test"
   },
   "peerDependencies": {
-    "@dwidge/crud-api-react": "^0.0.11",
+    "@dwidge/crud-api-react": "^0.0.12",
     "@dwidge/hooks-react": "^0.0.5",
     "@dwidge/randid": "^0.0.5",
     "@dwidge/utils-js": "^0.0.12",
