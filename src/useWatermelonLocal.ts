@@ -79,7 +79,7 @@ export const useWatermelonLocal = <
     filter?: T,
     { columns = allColumns } = {},
     getItem = useGetItem(filter, { columns }),
-    setItem = useSetItem(),
+    setItem = useSetItem(filter),
   ): AsyncState<PT | null> =>
     useAsyncSaveState([
       getItem,
