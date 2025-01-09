@@ -6,8 +6,9 @@ import { Fetch } from "@dwidge/crud-api-react";
 import { Database } from "@nozbe/watermelondb";
 import { synchronize } from "@nozbe/watermelondb/sync";
 import merge from "ts-deepmerge";
+import { SyncContextValue } from "./Sync";
 import { WatermelonSync } from "./useWatermelonSync";
-import { OnSync, SyncContextValue } from "./Sync";
+import "./groupBy.js";
 
 export const syncTables = async (
   fetch: Fetch,
@@ -44,15 +45,13 @@ export const syncTables = async (
   }).catch(catchDiagnosticError);
 
 const catchDiagnosticError = (e) => {
+  // log here because wmdb seems to swallow exceptions
+  console.log("catchDiagnosticErrorE1", e);
   if (e instanceof Error) {
     const m = e.message.toString();
     if (m == "Cannot read properties of null (reading 'find')") {
       console.log(
-        "catchDiagnosticErrorE1: Database has changed but did not migrate, please logout or reset the wmdb SQLLite/IndexDB",
-      );
-      throw new Error(
-        "catchDiagnosticErrorE1: Database has changed but did not migrate, please logout or reset the wmdb SQLLite/IndexDB",
-        { cause: e },
+        "catchDiagnosticErrorE2: Database has changed but did not migrate, please logout or reset the wmdb SQLLite/IndexDB",
       );
     }
   }
