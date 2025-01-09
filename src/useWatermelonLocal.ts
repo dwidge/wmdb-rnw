@@ -126,7 +126,7 @@ export const useWatermelonLocal = <
     let created: PT[] = [];
     await database.write(() => {
       const collection = database.get<W>(table);
-      const preparedCreates = items.map(parse).map((item) =>
+      const preparedCreates = items.map(parse).map(({ id, ...item }) =>
         collection.prepareCreate(
           (v) => (
             created.push(parse({ id: v.id })),
