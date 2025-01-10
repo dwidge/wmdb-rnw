@@ -41,7 +41,7 @@ const example = () => {
 
   // Now you can use Object.groupBy
   const groupedByAge = Object.groupBy(people, (person) => person.age);
-  console.log(groupedByAge);
+  // console.log(groupedByAge);
   // Expected output:
   // {
   //   '25': [ { name: 'Alice', age: 25 }, { name: 'Charlie', age: 25 } ],
@@ -50,9 +50,9 @@ const example = () => {
 
   const groupedByFirstLetter = Object.groupBy(
     ["apple", "banana", "apricot", "blueberry"],
-    (fruit) => fruit[0],
+    (fruit) => fruit[0] ?? "",
   );
-  console.log(groupedByFirstLetter);
+  // console.log(groupedByFirstLetter);
   // Expected output:
   // {
   //   a: [ 'apple', 'apricot' ],

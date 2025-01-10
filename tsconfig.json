@@ -1,15 +1,29 @@
 {
   "compilerOptions": {
-    "noImplicitAny": false,
     "allowJs": true,
+    "composite": true,
+    "declaration": true,
+    "declarationDir": "dist/types",
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
     "jsx": "react-jsx",
-    "module": "CommonJS",
+    "lib": ["ESNext", "DOM"],
+    "module": "ESNext",
     "moduleResolution": "Node",
-    "outDir": "dist/cjs",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,
+    "noUncheckedIndexedAccess": true,
+    "outDir": "dist/esm",
+    "resolveJsonModule": true,
+    "rootDir": "src",
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ESNext"
+    "target": "ESNext",
+    "types": []
   },
-  "include": ["src/**/*"]
+  "exclude": ["**/*.test.ts"],
+  "include": ["src"]
 }

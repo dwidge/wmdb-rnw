@@ -95,9 +95,11 @@ export const useWatermelonLocal = <
       [useGetList(filter, { columns })],
     );
 
-  const createItem = async (item: PT) => (await createItems([item]))[0];
+  const createItem = async (item: PT): Promise<PT> =>
+    (await createItems([item]))[0]!;
   // const updateItem = async (item: PT) => (await updateItems([item]))[0];
-  const deleteItem = async (item: PT) => (await deleteItems([item]))[0];
+  const deleteItem = async (item: PT): Promise<PT> =>
+    (await deleteItems([item]))[0]!;
 
   const useSetItem =
     (
@@ -122,7 +124,7 @@ export const useWatermelonLocal = <
   const useUpdateItem = () => updateItem;
   const useDeleteItem = () => deleteItem;
 
-  const createItems = async (items: PT[]) => {
+  const createItems = async (items: PT[]): Promise<PT[]> => {
     let created: PT[] = [];
     await database.write(() => {
       const collection = database.get<W>(table);
@@ -143,7 +145,7 @@ export const useWatermelonLocal = <
     return created;
   };
 
-  const updateItem = async ({ id, ...item }: PT) =>
+  const updateItem = async ({ id, ...item }: PT): Promise<Partial<T>> =>
     id == null
       ? createItem(item as Partial<T>)
       : parse(
