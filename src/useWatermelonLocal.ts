@@ -34,7 +34,7 @@ export const useWatermelonLocal = <
     filter: T = {} as T,
     { columns = allColumns } = {},
     items = useGetList(filter, { columns }),
-    setItems = useSetList(),
+    setItems = useSetList(filter),
     delItems = useDeleteList(),
   ): [
     items?: PT[],
@@ -70,8 +70,16 @@ export const useWatermelonLocal = <
     )
   );
 
-  const useSetList = () => updateItems;
-  const useCreateList = () => createItems;
+  const useSetList = (filter?: PT) =>
+    filter
+      ? (items: PT[]) =>
+          updateItems(items.map((v) => ({ ...v, ...dropUndefined(filter) })))
+      : updateItems;
+  const useCreateList = (filter?: PT) =>
+    filter
+      ? (items: PT[]) =>
+          createItems(items.map((v) => ({ ...v, ...dropUndefined(filter) })))
+      : createItems;
   const useUpdateList = () => updateItems;
   const useDeleteList = () => deleteItems;
 
@@ -103,16 +111,16 @@ export const useWatermelonLocal = <
 
   const useSetItem =
     (
-      { id }: PT = {} as PT,
+      { id, ...filter }: PT = {} as PT,
     ): AsyncDispatch<React.SetStateAction<PT | null>> | undefined =>
     async (
       v: React.SetStateAction<PT | null>,
-      next = typeof v === "function" ? v({} as PT) : v,
+      next = typeof v === "function"
+        ? v({ id, ...dropUndefined(filter) } as PT)
+        : v,
     ) =>
       next != null
-        ? id
-          ? updateItem({ id, ...next })
-          : createItem({ ...next })
+        ? updateItem({ id, ...next, ...dropUndefined(filter) })
         : id
           ? deleteItem({ id } as PT)
           : null;
@@ -120,7 +128,10 @@ export const useWatermelonLocal = <
   const deleteItemWmdbSingle = async (item: PT) =>
     (await deleteItemsWmdb([item]))[0];
 
-  const useCreateItem = () => createItem;
+  const useCreateItem = (filter?: PT) =>
+    filter
+      ? (item: PT) => createItem({ ...item, ...dropUndefined(filter) })
+      : createItem;
   const useUpdateItem = () => updateItem;
   const useDeleteItem = () => deleteItem;
 
