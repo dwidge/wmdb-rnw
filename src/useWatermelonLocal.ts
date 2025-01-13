@@ -9,6 +9,7 @@ import { dropUndefined, mergeObject } from "@dwidge/utils-js";
 import type { Database } from "@nozbe/watermelondb";
 import { Model, Q } from "@nozbe/watermelondb";
 import { useWmdbQuery } from "./useWmdbQuery";
+import { useMemo } from "react";
 
 export type ConvertItem<A, D> = (v: A) => D;
 export type AssertItem<T> = ConvertItem<T, T>;
@@ -41,29 +42,34 @@ export const useWatermelonLocal = <
   ] => [items, setItems, delItems];
 
   const useGetList = (
-    filter: PT = {} as PT,
+    filter?: PT,
     { columns = defaultGetColumns } = {},
   ): PT[] | undefined => (
     assert(Array.isArray(columns), "useGetListE1"),
-    useMemoValue(
-      (v) => v?.map(parse),
-      [
-        useWmdbQuery<W>(
-          table,
-          [
-            ...Object.entries(dropUndefined(filter)).map(([k, v]) =>
-              Array.isArray(v)
-                ? Q.or(...v.map((val) => Q.where(k, val)))
-                : Q.where(k, v),
-            ),
-            ...(columns.includes("deletedAt")
-              ? []
-              : [Q.where("deletedAt", null)]),
-          ],
-          columns,
+    useMemoValue((v, filter) => (filter ? v?.map(parse) : undefined), [
+      useWmdbQuery<W>(
+        table,
+        useMemo(
+          () =>
+            filter
+              ? [
+                  ...Object.entries(dropUndefined(filter ?? ({} as PT))).map(
+                    ([k, v]) =>
+                      Array.isArray(v)
+                        ? Q.or(...v.map((val) => Q.where(k, val)))
+                        : Q.where(k, v),
+                  ),
+                  ...(columns.includes("deletedAt")
+                    ? []
+                    : [Q.where("deletedAt", null)]),
+                ]
+              : [Q.where("id", null)],
+          [JSON.stringify(filter ?? null), columns],
         ),
-      ],
-    )
+        columns,
+      ),
+      JSON.stringify(filter ?? null),
+    ] as const)
   );
 
   const useSetList = (filter?: PT) => (items: PT[]) =>
@@ -99,8 +105,8 @@ export const useWatermelonLocal = <
     { columns = defaultGetColumns } = {},
   ): PT | null | undefined =>
     useMemoValue(
-      (v) => (v === undefined ? undefined : (v[0] ?? null)),
-      [useGetList(filter, { columns })],
+      (v, filter) => (v === undefined ? undefined : (v[0] ?? null)),
+      [useGetList(filter, { columns }), filter],
     );
 
   const createItem = async (item: PT): Promise<PT> =>
