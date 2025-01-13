@@ -3,12 +3,7 @@
 // https://www.boost.org/LICENSE_1_0.txt
 
 import { ApiItem, assert, BaseApiHooks } from "@dwidge/crud-api-react";
-import {
-  AsyncDispatch,
-  AsyncState,
-  useAsyncSaveState,
-  useMemoValue,
-} from "@dwidge/hooks-react";
+import { AsyncDispatch, AsyncState, useMemoValue } from "@dwidge/hooks-react";
 import { BigIntBase32, getUnixTimestamp } from "@dwidge/randid";
 import { dropUndefined, mergeObject } from "@dwidge/utils-js";
 import type { Database } from "@nozbe/watermelondb";
@@ -30,9 +25,12 @@ export const useWatermelonLocal = <
   database: Database,
 ): BaseApiHooks<T, PK> => {
   type PT = Partial<T>;
+  assert(Array.isArray(allColumns), "useWatermelonLocalE1");
+  const defaultGetColumns = allColumns.filter((v) => v !== "deletedAt");
+
   const useList = (
     filter: T = {} as T,
-    { columns = allColumns } = {},
+    { columns = defaultGetColumns } = {},
     items = useGetList(filter, { columns }),
     setItems = useSetList(filter),
     delItems = useDeleteList(),
@@ -42,11 +40,9 @@ export const useWatermelonLocal = <
     delItems?: (v: PT[]) => Promise<PT[]>,
   ] => [items, setItems, delItems];
 
-  assert(Array.isArray(allColumns), "useWatermelonLocalE1");
-
   const useGetList = (
     filter: PT = {} as PT,
-    { columns = allColumns } = {},
+    { columns = defaultGetColumns } = {},
   ): PT[] | undefined => (
     assert(Array.isArray(columns), "useGetListE1"),
     useMemoValue(
@@ -62,7 +58,7 @@ export const useWatermelonLocal = <
             ),
             ...(columns.includes("deletedAt")
               ? []
-              : [Q.where("deletedAt2", null)]),
+              : [Q.where("deletedAt", null)]),
           ],
           columns,
         ),
@@ -70,33 +66,37 @@ export const useWatermelonLocal = <
     )
   );
 
-  const useSetList = (filter?: PT) =>
-    filter
-      ? (items: PT[]) =>
-          updateItems(items.map((v) => ({ ...v, ...dropUndefined(filter) })))
-      : updateItems;
-  const useCreateList = (filter?: PT) =>
-    filter
-      ? (items: PT[]) =>
-          createItems(items.map((v) => ({ ...v, ...dropUndefined(filter) })))
-      : createItems;
-  const useUpdateList = () => updateItems;
-  const useDeleteList = () => deleteItems;
+  const useSetList = (filter?: PT) => (items: PT[]) =>
+    updateItems(
+      items.map((v) => parse({ ...v, ...dropUndefined(filter ?? {}) })),
+    );
+  const useCreateList = (filter?: PT) => (items: PT[]) =>
+    createItems(
+      items.map((v) => parse({ ...v, ...dropUndefined(filter ?? {}) })),
+    );
+  const useUpdateList = () => (items: PT[]) => updateItems(items.map(parse));
+  const useDeleteList = () => (items: PT[]) => deleteItems(items.map(parse));
 
   const useItem = (
     filter?: T,
-    { columns = allColumns } = {},
+    { columns = defaultGetColumns } = {},
     getItem = useGetItem(filter, { columns }),
     setItem = useSetItem(filter),
-  ): AsyncState<PT | null> =>
-    useAsyncSaveState([
-      getItem,
-      setItem,
-    ]) as unknown as AsyncState<Partial<T> | null>;
+  ): AsyncState<PT | null> => [
+    getItem,
+    setItem
+      ? (
+          getValue,
+          newValue = typeof getValue === "function"
+            ? getValue(getItem ?? null)
+            : getValue,
+        ) => setItem({ ...getItem, ...newValue } as Partial<T> | null)
+      : undefined,
+  ];
 
   const useGetItem = (
     filter?: T,
-    { columns = allColumns } = {},
+    { columns = defaultGetColumns } = {},
   ): PT | null | undefined =>
     useMemoValue(
       (v) => (v === undefined ? undefined : (v[0] ?? null)),
@@ -110,9 +110,7 @@ export const useWatermelonLocal = <
     (await deleteItems([item]))[0]!;
 
   const useSetItem =
-    (
-      { id, ...filter }: PT = {} as PT,
-    ): AsyncDispatch<React.SetStateAction<PT | null>> | undefined =>
+    ({ id, ...filter }: PT = {} as PT): AsyncDispatch<PT | null> | undefined =>
     async (
       v: React.SetStateAction<PT | null>,
       next = typeof v === "function"
@@ -165,11 +163,14 @@ export const useWatermelonLocal = <
               .get<W>(table)
               .find(BigIntBase32.parse(id))
               .then((r) =>
-                r.update((v) =>
-                  mergeObject(v, {
-                    updatedAt2: getUnixTimestamp(),
-                    ...parse(item),
-                  }),
+                r.update(
+                  (v) => (
+                    mergeObject(v, {
+                      updatedAt2: getUnixTimestamp(),
+                      ...item,
+                    }),
+                    v
+                  ),
                 ),
               ),
           ),
@@ -215,7 +216,12 @@ export const useWatermelonLocal = <
   };
 
   const deleteItems = async (items: PT[]) =>
-    updateItems(items.map((v) => ({ ...v, deletedAt2: getUnixTimestamp() })));
+    updateItems(
+      items.map((v) => ({
+        ...parse(v),
+        deletedAt2: getUnixTimestamp(),
+      })),
+    );
 
   const deleteItemsWmdb = async (items: PT[]) => {
     return await database.write(async () => {
