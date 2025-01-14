@@ -64,9 +64,9 @@ export const useWatermelonLocal = <
                     : [Q.where("deletedAt", null)]),
                 ]
               : [Q.where("id", null)],
-          [JSON.stringify(filter ?? null), columns],
+          [JSON.stringify(filter ?? null), JSON.stringify(columns)],
         ),
-        columns,
+        useMemo(() => columns, [JSON.stringify(columns)]),
       ),
       JSON.stringify(filter ?? null),
     ] as const)
@@ -106,7 +106,7 @@ export const useWatermelonLocal = <
   ): PT | null | undefined =>
     useMemoValue(
       (v, filter) => (v === undefined ? undefined : (v[0] ?? null)),
-      [useGetList(filter, { columns }), filter],
+      [useGetList(filter, { columns }), JSON.stringify(filter)] as const,
     );
 
   const createItem = async (item: PT): Promise<PT> =>

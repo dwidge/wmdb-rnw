@@ -35,7 +35,7 @@ export const useWmdbQuery = <T extends Model>(
     return () => {
       subscription.unsubscribe();
     };
-  }, [db, query]);
+  }, [db, query, columns]);
 
   return items;
 };
