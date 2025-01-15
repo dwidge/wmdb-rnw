@@ -28,7 +28,7 @@ export const syncTables = async (
   fetch: Fetch,
   database: Database,
   tables: WatermelonSync<any>[],
-  { onPull, onPush }: SyncContextValue,
+  { onPull, onPush, onError }: SyncContextValue,
 ) =>
   synchronize({
     database,
@@ -52,9 +52,9 @@ export const syncTables = async (
       );
     },
     migrationsEnabledAtVersion: 1,
-  }).catch(catchDiagnosticError);
+  }).catch(catchDiagnosticError(onError));
 
-const catchDiagnosticError = (e) => {
+const catchDiagnosticError = (onError?: (e: Error) => void) => (e) => {
   // log here because wmdb seems to swallow exceptions
   console.log("catchDiagnosticErrorE1", e);
   if (e instanceof Error) {
@@ -65,5 +65,6 @@ const catchDiagnosticError = (e) => {
       );
     }
   }
-  throw e;
+  if (onError) onError(e);
+  else throw e;
 };

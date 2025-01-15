@@ -33,6 +33,7 @@ export interface SyncContextValue {
   log: (message: string, ...v: unknown[]) => void;
   onPull?: OnSync;
   onPush?: OnSync;
+  onError?: (e: Error) => void;
   busyRef: MutableRefObject<boolean>;
   lastSyncTime: number | null;
   setLastSyncTime: React.Dispatch<React.SetStateAction<number | null>>;
