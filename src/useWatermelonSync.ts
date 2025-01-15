@@ -3,7 +3,7 @@
 // https://www.boost.org/LICENSE_1_0.txt
 
 import { ApiWmdbItem1, ExtendedApi, Fetch } from "@dwidge/crud-api-react";
-import { unixSeconds } from "@dwidge/utils-js";
+import { groupBy, unixSeconds } from "@dwidge/utils-js";
 import { SyncPullArgs, SyncPushArgs } from "@nozbe/watermelondb/sync";
 import { OnSync } from "./Sync.js";
 import { fetchItemsInChunks } from "./fetchItemsInChunks.js";
@@ -49,7 +49,7 @@ export const useWatermelonSync = <T extends ApiWmdbItem1>(
       created = [],
       updated = [],
       deleted = [],
-    } = Object.groupBy(items, (item) =>
+    } = groupBy(items, (item) =>
       lastPulledAt
         ? deletedAfter(lastPulledAt)(item)
           ? "deleted"
