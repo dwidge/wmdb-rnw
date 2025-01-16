@@ -2,14 +2,19 @@
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 
-import { ApiItem, assert, BaseApiHooks } from "@dwidge/crud-api-react";
+import {
+  assert,
+  BaseApiHooks,
+  QueryOptions,
+  StringKey,
+} from "@dwidge/crud-api-react";
 import { AsyncDispatch, AsyncState, useMemoValue } from "@dwidge/hooks-react";
 import { BigIntBase32, getUnixTimestamp } from "@dwidge/randid";
 import { dropUndefined, mergeObject } from "@dwidge/utils-js";
 import type { Database } from "@nozbe/watermelondb";
 import { Model, Q } from "@nozbe/watermelondb";
-import { useWmdbQuery } from "./useWmdbQuery";
 import { useMemo } from "react";
+import { useWmdbQuery } from "./useWmdbQuery.js";
 
 export type ConvertItem<A, D> = (v: A) => D;
 export type AssertItem<T> = ConvertItem<T, T>;
@@ -17,7 +22,12 @@ export type ParseItem<T> = ConvertItem<any, T>;
 
 export const useWatermelonLocal = <
   W extends Model,
-  T extends ApiItem,
+  T extends {
+    id: string;
+    updatedAt: number;
+    createdAt: number;
+    deletedAt: number | null;
+  },
   PK = Pick<T, "id">,
 >(
   parse: ParseItem<Partial<T>>,
@@ -26,13 +36,14 @@ export const useWatermelonLocal = <
   database: Database,
 ): BaseApiHooks<T, PK> => {
   type PT = Partial<T>;
+  type K = StringKey<T>;
   assert(Array.isArray(allColumns), "useWatermelonLocalE1");
-  const defaultGetColumns = allColumns.filter((v) => v !== "deletedAt");
+  const defaultGetColumns = allColumns.filter((v) => v !== "deletedAt") as K[];
 
   const useList = (
-    filter: T = {} as T,
-    { columns = defaultGetColumns } = {},
-    items = useGetList(filter, { columns }),
+    filter?: T,
+    options?: QueryOptions<K>,
+    items = useGetList(filter, options),
     setItems = useSetList(filter),
     delItems = useDeleteList(),
   ): [
@@ -43,33 +54,47 @@ export const useWatermelonLocal = <
 
   const useGetList = (
     filter?: PT,
-    { columns = defaultGetColumns } = {},
+    { columns = defaultGetColumns, ...options }: QueryOptions<K> = {},
   ): PT[] | undefined => (
     assert(Array.isArray(columns), "useGetListE1"),
-    useMemoValue((v, filter) => (filter ? v?.map(parse) : undefined), [
-      useWmdbQuery<W>(
-        table,
-        useMemo(
-          () =>
-            filter
-              ? [
-                  ...Object.entries(dropUndefined(filter ?? ({} as PT))).map(
-                    ([k, v]) =>
-                      Array.isArray(v)
-                        ? Q.or(...v.map((val) => Q.where(k, val)))
-                        : Q.where(k, v),
-                  ),
-                  ...(columns.includes("deletedAt")
-                    ? []
-                    : [Q.where("deletedAt", null)]),
-                ]
-              : [Q.where("id", null)],
-          [JSON.stringify(filter ?? null), JSON.stringify(columns)],
-        ),
-        useMemo(() => columns, [JSON.stringify(columns)]),
+    useMemoValue(
+      (v, filter) => (
+        v && v.length > 500
+          ? console.warn(
+              "useGetListE2: More than 500 items returned by query. Fix the query or add offset and limit to improve performance.",
+              { filter, columns },
+            )
+          : {},
+        filter ? v?.map(parse) : undefined
       ),
-      JSON.stringify(filter ?? null),
-    ] as const)
+      [
+        useWmdbQuery<W>(
+          table,
+          useMemo(
+            () =>
+              filter
+                ? [
+                    ...Object.entries(dropUndefined(filter ?? ({} as PT))).map(
+                      ([k, v]) =>
+                        Array.isArray(v)
+                          ? Q.or(...v.map((val) => Q.where(k, val)))
+                          : Q.where(k, v),
+                    ),
+                    ...(columns.includes("deletedAt" as StringKey<T>)
+                      ? []
+                      : [Q.where("deletedAt", null)]),
+                  ]
+                : [Q.where("id", null)],
+            [JSON.stringify(filter ?? null), JSON.stringify(columns)],
+          ),
+          useMemo(
+            () => ({ columns, ...options }) as any,
+            [JSON.stringify({ columns, ...options })],
+          ),
+        ),
+        JSON.stringify(filter ?? null),
+      ] as const,
+    )
   );
 
   const useSetList = (filter?: PT) => (items: PT[]) =>
