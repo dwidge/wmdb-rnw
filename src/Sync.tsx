@@ -59,6 +59,7 @@ export const SyncProvider: React.FC<
         | "log"
         | "onPull"
         | "onPush"
+        | "onError"
         | "syncIntervalSeconds"
       >
     >
